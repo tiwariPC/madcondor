@@ -1,0 +1,35 @@
+launch
+###################################
+## Fixed parameters (per job)
+###################################
+
+set param_card DMINPUTS 1 1.0
+set param_card FRBLOCK 3 1
+set param_card FRBLOCK 2 __TANBETA__
+
+set param_card HIGGS 1 6
+set param_card HIGGS 2 0
+set param_card HIGGS 3 0
+set param_card HIGGS 5 __SINTHETA__
+
+set param_card MASS 5 0.0
+set param_card MASS 35 __M35__
+set param_card MASS 36 __M36__
+set param_card MASS 37 __M37__
+set param_card MASS 52 1
+
+###################################
+## Internal scan (per job)
+###################################
+
+set param_card MASS 55 __M55__
+
+###################################
+## Decays
+###################################
+
+set param_card DECAY 25 auto
+set param_card DECAY 35 auto
+set param_card DECAY 36 auto
+set param_card DECAY 37 auto
+set param_card DECAY 55 auto
