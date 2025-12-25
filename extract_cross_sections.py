@@ -128,7 +128,7 @@ def main():
             if cross_section is not None:
                 params['cross_section'] = cross_section
                 data.append(params)
-                print(f"Processed: {event_dir} -> {cross_section:.10f} pb")
+                print(f"Processed: {event_dir} -> {cross_section:.15f} pb")
             else:
                 print(f"Warning: Could not extract cross-section from {banner_path}")
         else:
@@ -162,7 +162,7 @@ def main():
             cross_section = entry.get('cross_section', 'N/A')
 
             if isinstance(cross_section, float):
-                f.write(f"{sintheta:<12.4f} {tanbeta:<10.1f} {mA:<8.0f} {ma:<8.0f} {cross_section:<20.10f}\n")
+                f.write(f"{sintheta:<12.4f} {tanbeta:<10.1f} {mA:<8.0f} {ma:<8.0f} {cross_section:<20.15f}\n")
             else:
                 f.write(f"{sintheta:<12} {tanbeta:<10} {mA:<8} {ma:<8} {cross_section:<20}\n")
 

@@ -64,7 +64,7 @@ cd MG5_aMC_v3_5_0
 
 ### Step 3: Install the Model
 
-The model directory `Pseudoscalar_2HDMI` is included in this repository. Copy it to MadGraph's models directory:
+The model directory `Pseudoscalar_2HDMI` is included in this repository. Copy it to MadGraph's models directory (can also be found here https://github.com/LHC-DMWG/model-repository/):
 
 ```bash
 # From the madcondor directory, copy the model to MadGraph's models directory
