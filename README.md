@@ -24,6 +24,163 @@ The workflow scans over multiple physics parameters:
 
 - **`bbdm_2HDMa_type1_case1_scan.tar.gz`**: Compressed MadGraph process directory containing the physics model and process definition
 - **`joblist.txt`**: Generated file containing all parameter combinations (one per line: `sintheta tanbeta m35 m55`)
+- **`generate_card.txt`**: MadGraph process generation card for creating the initial process directory
+
+## Initial Setup: Creating the MadGraph Process Directory
+
+Before running parameter scans, you need to set up MadGraph and generate the process directory. Follow these steps:
+
+### Step 1: Clone This Directory
+
+Clone or download this repository to your local machine:
+
+```bash
+git clone <repository-url>
+cd madcondor
+```
+
+Or if you already have the directory, navigate to it:
+
+```bash
+cd /path/to/madcondor
+```
+
+### Step 2: Download and Install MadGraph5_aMC@NLO
+
+Download MadGraph5_aMC@NLO from the official website:
+
+```bash
+# Download MadGraph (adjust version as needed)
+wget https://launchpad.net/mg5amcnlo/3.0/3.5.x/+download/MG5_aMC_v3.5.0.tar.gz
+
+# Extract the archive
+tar -xzf MG5_aMC_v3.5.0.tar.gz
+
+# Navigate to the MadGraph directory
+cd MG5_aMC_v3_5_0
+```
+
+**Note:** Replace the version number with the appropriate version you need. You can also download from: https://launchpad.net/mg5amcnlo/
+
+### Step 3: Install the Model
+
+The model directory `Pseudoscalar_2HDMI` is included in this repository. Copy it to MadGraph's models directory:
+
+```bash
+# From the madcondor directory, copy the model to MadGraph's models directory
+# Make sure you're in the madcondor directory first
+cd /path/to/madcondor
+
+# Copy the model directory to MadGraph's models folder
+cp -r Pseudoscalar_2HDMI /path/to/MG5_aMC_v3_5_0/models/
+
+# Verify the model was copied
+ls /path/to/MG5_aMC_v3_5_0/models/Pseudoscalar_2HDMI
+```
+
+**Note:** The model directory is named `Pseudoscalar_2HDMI`, but in `generate_card.txt` it's referenced as `Pseudoscalar_2HDMI-bbMET_5FS`. This is because MadGraph automatically appends the restriction file name (`restrict_bbMET_5FS.dat`) to the model name. The model directory itself should be copied as `Pseudoscalar_2HDMI`.
+
+### Step 4: Run MadGraph with generate_card.txt
+
+Run MadGraph with the generation card using input redirection:
+
+```bash
+# From the MG5_aMC_v3_5_0 directory, run with input redirection
+./bin/mg5_aMC /path/to/madcondor/generate_card.txt
+```
+
+This will create a process directory named `bbdm_2HDMa_type1_case1_scan` (as specified in the `output` command in `generate_card.txt`).
+
+### Step 5: Modify SubProcesses/setcuts.f
+
+After the process is generated, you need to modify the cuts file to add special handling for the xd xd~ particles (particle ID 52) in the missing Et block.
+
+Navigate to the generated process directory:
+
+```bash
+cd bbdm_2HDMa_type1_case1_scan
+```
+
+Edit the file `SubProcesses/setcuts.f` and locate the section that handles c-neutrino's (missing Et block). Add the following line in that section:
+
+```fortran
+if (abs(idup(i,1,iproc)).eq.52) is_a_nu(i)=.true.  ! no cuts on xd xd~
+```
+
+**How to find the right location:**
+
+1. Open `SubProcesses/setcuts.f` in a text editor
+2. Search for the section that sets `is_a_nu(i)=.true.` for neutrinos
+3. Add the line above in that section, typically near other neutrino identification lines
+
+**Example location (the exact line numbers may vary):**
+
+```fortran
+      do i=1,nexternal
+        if (abs(idup(i,1,iproc)).eq.12) is_a_nu(i)=.true.  ! electron neutrino
+        if (abs(idup(i,1,iproc)).eq.14) is_a_nu(i)=.true.  ! muon neutrino
+        if (abs(idup(i,1,iproc)).eq.16) is_a_nu(i)=.true.  ! tau neutrino
+        if (abs(idup(i,1,iproc)).eq.52) is_a_nu(i)=.true.  ! no cuts on xd xd~
+      enddo
+```
+
+### Step 6: Modify Cards/run_card.dat
+
+Edit the run card to add a missing Et cut and turn off systematics:
+
+```bash
+# Edit the run card
+nano Cards/run_card.dat
+# or use your preferred editor
+```
+
+**A. Add Missing Et Cut:**
+
+Find the section `# Minimum and maximum pt's (for max, -1 means no cut)` and add the following line in that block:
+
+```
+150.0  = misset    ! minimum missing Et (sum of neutrino's momenta)
+```
+
+**B. Turn Off Systematics:**
+
+Find the section `# Store info for systematics studies` and set systematics to off (typically by setting the flag to `False` or `0`, depending on the card format).
+
+**Example modifications:**
+
+```bash
+# In the "Minimum and maximum pt's" block, add:
+150.0  = misset    ! minimum missing Et (sum of neutrino's momenta)
+
+# In the "Store info for systematics studies" block, set:
+False  = use_syst  ! Enable systematics studies
+```
+
+### Step 7: Create the Process Archive
+
+After making all modifications, create a tar.gz archive of the process directory for use with the parameter scan:
+
+```bash
+# From the parent directory of bbdm_2HDMa_type1_case1_scan
+cd ..
+tar -czf bbdm_2HDMa_type1_case1_scan.tar.gz bbdm_2HDMa_type1_case1_scan/
+
+# Copy it to your madcondor directory
+cp bbdm_2HDMa_type1_case1_scan.tar.gz /path/to/madcondor/
+```
+
+**Note:** This archive will be used by the HTCondor submission script. Make sure the path in `subMadscan.sub` points to this file.
+
+### Verification Checklist
+
+Before proceeding to parameter scans, verify:
+
+- [ ] Model directory is installed in `MG5_aMC_v3_5_0/models/`
+- [ ] Process directory `bbdm_2HDMa_type1_case1_scan` was generated successfully
+- [ ] `SubProcesses/setcuts.f` contains the line for particle ID 52
+- [ ] `Cards/run_card.dat` has the missing Et cut (150.0)
+- [ ] `Cards/run_card.dat` has systematics turned off
+- [ ] Process archive `bbdm_2HDMa_type1_case1_scan.tar.gz` was created
 
 ## Setup Instructions
 
