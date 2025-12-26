@@ -115,7 +115,7 @@ def main():
                         if d.is_dir() and d.name.startswith('Events_')])
 
     print(f"Found {len(event_dirs)} event directories")
-
+    count = 0
     for event_dir in event_dirs:
         # Parse directory name
         params = parse_directory_name(event_dir)
@@ -128,7 +128,9 @@ def main():
             if cross_section is not None:
                 params['cross_section'] = cross_section
                 data.append(params)
-                print(f"Processed: {event_dir} -> {cross_section:.15f} pb")
+                count += 1
+                if count % 100 == 0:
+                    print(f"Processed {count}th event: {event_dir} -> {cross_section:.15f} pb")
             else:
                 print(f"Warning: Could not extract cross-section from {banner_path}")
         else:
